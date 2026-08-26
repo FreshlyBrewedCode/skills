@@ -13,6 +13,7 @@ First, you need to make the reference easily accessible:
   - clone/copy/checkout to a gitignored `.references` directory
   - if the reference comes from another branch of the same repo, checkout a worktree to `.references`
   - use one sub dir per reference so you can have multiple references under `.references`
+- if the user referenced an existing idea (e.g. in `docs/references/<idea>.md`), read the file and make any referenced sources accessible if necessary 
 
 # Extract ideas from the reference
 
