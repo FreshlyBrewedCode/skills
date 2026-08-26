@@ -39,9 +39,15 @@ The users edits (checks, comments) are automatically stored in local storage
 <ul data-picker>
   <li data-name="node name" data-checked>
     Description goes here
-    <li data-name"child node">Child description</li>
+    <ul>
+      <li data-name="child node">Child description</li>
+    </ul>
   </li>
 </ul>
 ```
 
 - use one or more `<details>` in the description of nodes if you want to include more text/content without blowing up the size of the node
+
+# Presenting to the user
+
+Write the html file to `.scratch/pickers/<picker name>.html`, present a `file://` url to it and ask the user to fill it out and paste the selection back to you.

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Interactive picker</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17202a;
+      --muted: #607080;
+      --paper: #f5f7f5;
+      --card: #ffffff;
+      --line: #d7ded8;
+      --accent: #246b50;
+      --accent-soft: #e5f1eb;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    main { max-width: 840px; margin: 0 auto; padding: 48px 24px 96px; }
+    header { margin-bottom: 32px; }
+    h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.4rem); letter-spacing: -.045em; line-height: 1; }
+    header p { max-width: 62ch; margin: 14px 0 0; color: var(--muted); }
+    section + section { margin-top: 36px; }
+    h2 { margin: 0 0 12px; font-size: 1rem; letter-spacing: .08em; text-transform: uppercase; }
+    ul[data-picker], ul[data-picker] ul { margin: 0; padding: 0; list-style: none; }
+    ul[data-picker] li + li { margin-top: 10px; }
+    ul[data-picker] ul { margin: 10px 0 4px 23px; padding-left: 14px; border-left: 1px solid var(--line); }
+    li[data-name] { --node-color: var(--accent); }
+    .picker-node {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      padding: 15px 16px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--node-color);
+      background: var(--card);
+      position: relative;
+    }
+    .picker-node:has(input:checked) { background: var(--accent-soft); }
+    .picker-checkbox { width: 18px; height: 18px; margin: 3px 0 0; accent-color: var(--node-color); cursor: pointer; }
+    .picker-name { display: block; padding-right: 124px; font-weight: 700; cursor: pointer; }
+    .picker-description { margin-top: 3px; color: var(--muted); font-size: .94rem; }
+    .picker-description > :first-child { margin-top: 0; }
+    .picker-description > :last-child { margin-bottom: 0; }
+    details { margin-top: 8px; }
+    summary { cursor: pointer; color: var(--ink); }
+    .picker-comment-toggle {
+      position: absolute; top: 14px; right: 16px;
+      opacity: 0; pointer-events: none; transition: opacity .15s ease;
+      border: 0; padding: 0; background: transparent; color: var(--muted);
+      font-size: .88rem; font-weight: 400;
+    }
+    .picker-node:hover .picker-comment-toggle, .picker-node:focus-within .picker-comment-toggle {
+      opacity: 1; pointer-events: auto;
+    }
+    .picker-comment-toggle:hover { color: var(--ink); filter: none; }
+    .picker-comment { margin-top: 12px; }
+    textarea {
+      width: 100%; min-height: 72px; margin-top: 8px; padding: 9px 10px;
+      border: 1px solid var(--line); background: #fff;
+      color: var(--ink); font: inherit; font-size: .9rem; resize: vertical;
+    }
+    .picker-actions {
+      display: flex; align-items: center; gap: 14px;
+      margin-top: 32px; padding: 16px 0;
+    }
+    button {
+      border: 0; padding: 11px 15px; background: var(--accent);
+      color: #fff; font: inherit; font-weight: 700; cursor: pointer;
+    }
+    button:hover { filter: brightness(.92); }
+    #copy-status { color: var(--muted); font-size: .9rem; }
+    @media (max-width: 520px) {
+      .picker-name { padding-right: 0; }
+      .picker-comment-toggle { top: 42px; }
+      .picker-description { margin-top: 22px; }
+    }
+    <!-- custom css -->
+  </style>
+</head>
+<body>
+  <main>
+    <!-- content -->
+    <div class="picker-actions">
+      <button type="button" id="copy-selection">Copy selection</button>
+      <span id="copy-status" aria-live="polite"></span>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const storageKey = `interactive-picker:${location.pathname}`;
+      const nodes = [...document.querySelectorAll('li[data-name]')];
+
+      const directChildren = (node) => [...node.querySelectorAll(':scope > ul > li[data-name]')];
+      const descendants = (node) => [...node.querySelectorAll('ul li[data-name]')];
+      const checkbox = (node) => node.querySelector(':scope > .picker-node > input');
+
+      nodes.forEach((node, index) => {
+        const description = [...node.childNodes]
+          .filter((child) => child.nodeType !== Node.ELEMENT_NODE || child.tagName !== 'UL')
+          .map((child) => child.cloneNode(true));
+        const color = node.dataset.color || '#246b50';
+        const id = `picker-node-${index}`;
+        const card = document.createElement('div');
+        card.className = 'picker-node';
+        card.style.setProperty('--node-color', color);
+        card.innerHTML = `<input class="picker-checkbox" id="${id}" type="checkbox"><div><label class="picker-name" for="${id}"></label><button class="picker-comment-toggle" type="button">Add a comment</button><div class="picker-description"></div><div class="picker-comment"><textarea hidden placeholder="Optional comment"></textarea></div></div>`;
+        card.querySelector('.picker-name').textContent = node.dataset.name;
+        card.querySelector('.picker-description').append(...description);
+        node.replaceChildren(card, ...[...node.querySelectorAll(':scope > ul')]);
+      });
+
+      const save = () => {
+        const state = nodes.map((node) => ({
+          checked: checkbox(node).checked,
+          comment: node.querySelector('textarea').value,
+        }));
+        localStorage.setItem(storageKey, JSON.stringify(state));
+      };
+
+      const updateParents = (node) => {
+        let parentList = node.parentElement.closest('li[data-name]');
+        while (parentList) {
+          const children = directChildren(parentList).map(checkbox);
+          const parentCheckbox = checkbox(parentList);
+          parentCheckbox.checked = children.length > 0 && children.every((child) => child.checked);
+          parentCheckbox.indeterminate = children.some((child) => child.checked || child.indeterminate) && !parentCheckbox.checked;
+          parentList = parentList.parentElement.closest('li[data-name]');
+        }
+      };
+
+      const restore = () => {
+        let state = [];
+        try { state = JSON.parse(localStorage.getItem(storageKey)) || []; } catch (_) { /* Ignore malformed saved state. */ }
+        nodes.forEach((node, index) => {
+          const saved = state[index];
+          const initiallyChecked = node.hasAttribute('data-checked');
+          checkbox(node).checked = saved ? saved.checked : initiallyChecked;
+          node.querySelector('textarea').value = saved?.comment || '';
+          node.querySelector('textarea').hidden = !node.querySelector('textarea').value;
+          if (!saved && initiallyChecked) {
+            descendants(node).forEach((child) => { checkbox(child).checked = true; });
+          }
+        });
+        nodes.filter((node) => directChildren(node).length).forEach(updateParents);
+      };
+
+      nodes.forEach((node) => {
+        checkbox(node).addEventListener('change', (event) => {
+          descendants(node).forEach((child) => {
+            checkbox(child).checked = event.target.checked;
+            checkbox(child).indeterminate = false;
+          });
+          updateParents(node);
+          save();
+        });
+        node.querySelector('textarea').addEventListener('input', save);
+        node.querySelector('.picker-comment-toggle').addEventListener('click', () => {
+          const comment = node.querySelector('textarea');
+          comment.hidden = false;
+          comment.focus();
+        });
+      });
+
+      document.querySelector('#copy-selection').addEventListener('click', async () => {
+        const selected = nodes.filter((node) => checkbox(node).checked).map((node) => {
+          let depth = 0;
+          let parent = node.parentElement.closest('li[data-name]');
+          while (parent) { depth += 1; parent = parent.parentElement.closest('li[data-name]'); }
+          const comment = node.querySelector('textarea').value.trim();
+          return `${'  '.repeat(depth)}- ${node.dataset.name}${comment ? `: ${comment}` : ''}`;
+        });
+        const status = document.querySelector('#copy-status');
+        if (!selected.length) { status.textContent = 'Select at least one item first.'; return; }
+        const text = selected.join('\n');
+        try {
+          if (!navigator.clipboard) throw new Error('Clipboard API unavailable');
+          await navigator.clipboard.writeText(text);
+          status.textContent = `${selected.length} item${selected.length === 1 ? '' : 's'} copied.`;
+        } catch (_) {
+          const fallback = document.createElement('textarea');
+          fallback.value = text;
+          fallback.style.cssText = 'position:fixed;opacity:0';
+          document.body.append(fallback);
+          fallback.select();
+          const copied = document.execCommand('copy');
+          fallback.remove();
+          status.textContent = copied ? `${selected.length} item${selected.length === 1 ? '' : 's'} copied.` : 'Clipboard access was blocked.';
+        }
+      });
+
+      restore();
+    })();
+  </script>
+</body>
+</html>
