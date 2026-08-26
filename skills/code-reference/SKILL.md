@@ -14,10 +14,10 @@ First, you need to make the reference easily accessible:
   - if the reference comes from another branch of the same repo, checkout a worktree to `.references`
   - use one sub dir per reference so you can have multiple references under `.references`
 
-# Use the reference
+# Extract ideas from the reference
 
 A reference can contain a lot of information. It is important to identify which parts of the reference material are relevant. 
-We can group the available information into categories to make them easier to describe:
+We can group the available information into categories of **ideas** to make them easier to describe:
 
 - Concepts: high level solutions or approaches to solving a problem. Concrete technologies or patterns can be substituted while the concept remains the same.  
 - Technologies: libraries, frameworks, programming languages, tools, etc.
@@ -25,4 +25,26 @@ We can group the available information into categories to make them easier to de
 
 Before you go back to the user, try to scan the reference for these (trying to pick up the ones most relevant for the task). If needed, dispatch subagents for certain parts of the codebase or certain concepts/technologies/patterns. Note that you don't need to find every little detail. You can always deep dive later if needed.
 
-All or only parts of these categories can be relevant. Maybe the user only want to focus on one specific concept, a broad range of patterns, or a combination of both. If its not clear from the users request, clarify it using a grilling session or an interactive reference picker.
+All or only parts of these catagories can be relevant. Maybe the user only wants to focus on one specific concept, a broad range of patterns, or a combination of both. If its not clear from the users request, clarify it using a grilling session or an interactive reference picker.
+
+# Using an interactive picker
+
+If the codebase is large or there are many ideas you can present the discovered information in an interactive picker to the user. Before you do this, ask them if they want to proceed this way. The main idea is:
+- Break down the ideas in a tree structure, available nodes: each idea catagory + group (generic container node)
+- More nested tree structure can be used to increase clarity/structure, use as you see fit
+- User can "pick"/"check" nodes they want to include/reference and add additional comments
+
+see [interactive_picker.md](interactive_picker.md) for instructions on how to create the picker.
+
+# Use the referenced ideas
+
+Depending on the task, you may want to:
+- directly apply the referenced ideas by implementing it/writing code
+- document the relevant ideas
+  - on the current spec/plan/issue for the given task
+  - in a separate file at `docs/references/<name of idea>.md` file
+    - mention the original sources
+    - describe the idea
+    - does not have to capture every detail of the idea but serve as the main entry point for referencing this idea in the future
+
+If it is not clear which of these options to chose, clarify it with the user.
