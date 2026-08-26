@@ -26,7 +26,7 @@ We can group the available information into categories of **ideas** to make them
 
 Before you go back to the user, try to scan the reference for these (trying to pick up the ones most relevant for the task). If needed, dispatch subagents for certain parts of the codebase or certain concepts/technologies/patterns. Note that you don't need to find every little detail. You can always deep dive later if needed.
 
-All or only parts of these catagories can be relevant. Maybe the user only wants to focus on one specific concept, a broad range of patterns, or a combination of both. If its not clear from the users request, clarify it using a grilling session or an interactive reference picker.
+All or only parts of these catagories can be relevant. Maybe the user only wants to focus on one specific concept, a broad range of patterns, or a combination of both. If its not clear from the users request, clarify it using a grilling session or an interactive picker.
 
 # Using an interactive picker
 
@@ -35,7 +35,7 @@ If the codebase is large or there are many ideas you can present the discovered 
 - More nested tree structure can be used to increase clarity/structure, use as you see fit
 - User can "pick"/"check" nodes they want to include/reference and add additional comments
 
-see [interactive_picker.md](interactive_picker.md) for instructions on how to create the picker.
+use the interactive picker skill to learn how to create and present one to the user.
 
 # Use the referenced ideas
 
