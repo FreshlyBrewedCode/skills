@@ -31,9 +31,13 @@ All or only parts of these catagories can be relevant. Maybe the user only wants
 # Using an interactive picker
 
 If the codebase is large or there are many ideas you can present the discovered information in an interactive picker to the user. Before you do this, ask them if they want to proceed this way. The main idea is:
-- Break down the ideas in a tree structure, available nodes: each idea catagory + group (generic container node)
+- Break down the ideas in a tree structure 
+  - use top level nodes to group by domain
+  - create individual nodes for each idea
+  - mark the idea catagory in the title (e.g. "Concept:")
+  - use consistent color coding for each catagory (concept: orange, technology: blue, pattern: green)
+  - add a `<details>` at the bottom of each idea that contains the paths to relevant source files
 - More nested tree structure can be used to increase clarity/structure, use as you see fit
-- User can "pick"/"check" nodes they want to include/reference and add additional comments
 
 use the interactive picker skill to learn how to create and present one to the user.
 
