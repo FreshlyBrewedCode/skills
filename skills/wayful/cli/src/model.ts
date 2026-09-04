@@ -99,10 +99,8 @@ async function typeDef(root: string, name: string) {
     fail(`type filename and name do not match for '${name}'.`);
   return {
     ...data,
-    description:
-      data.description === undefined
-        ? undefined
-        : nonEmpty(data.description, "type description"),
+    name: identifier(data.name, "type name"),
+    description: nonEmpty(data.description, "type description"),
     required_inputs: slots(data.required_inputs ?? [], "required_inputs"),
     required_outputs: slots(data.required_outputs ?? [], "required_outputs"),
     instructions: body,

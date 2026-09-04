@@ -280,22 +280,47 @@ describe("maps, types, and readable rendering", () => {
     expect(await readFile(mapFile, "utf8")).toBe(corrupted);
   });
 
-  test("lists and shows valid manual types including instructions", async () => {
+  test("parses type names and descriptions from frontmatter and instructions from Markdown bodies", async () => {
     const project = await projectFixture({ type: "research", typeBody: "Use primary sources.\n" });
-    const listed = invoke(["type", "list", "--json"], project);
+    const listed = invoke(["type", "list"], project);
     expect(listed.exitCode).toBe(0);
-    expect(listed.stdout).toContain("research");
-    const shown = invoke(["type", "show", "research", "--json"], project);
+    expect(listed.stdout).toBe("research: Fixture type\n");
+
+    const listedJson = invoke(["type", "list", "--json"], project);
+    expect(JSON.parse(listedJson.stdout)).toEqual([
+      {
+        format_version: 1,
+        name: "research",
+        description: "Fixture type",
+        required_inputs: [],
+        required_outputs: [],
+        instructions: "Use primary sources.\n",
+      },
+    ]);
+
+    const shown = invoke(["type", "show", "research"], project);
     expect(shown.exitCode).toBe(0);
-    expect(shown.stdout).toContain("Use primary sources.");
+    expect(shown.stdout).toBe("research: Fixture type\nInstructions:\nUse primary sources.\n\n");
+  });
+
+  test("requires every type to declare a non-empty frontmatter description", async () => {
+    const project = await projectFixture();
+    await writeFile(join(project, ".wayful", "types", "task.md"), "---\nformat_version: 1\nname: task\nrequired_inputs: []\nrequired_outputs: []\n---\nInstructions.\n");
+
+    const result = invoke(["type", "list"], project);
+
+    expectCommandError(result);
+    expect(result.stderr).toContain("type description is required");
   });
 
   test("rejects malformed type schema, filename/name mismatch, and disallowed map types", async () => {
     const project = await projectFixture({ mapFields: "allowed_step_types = [\"task\"]\n" });
     await writeFile(join(project, ".wayful", "types", "wrong.md"), "---\nformat_version: 1\nname: other\nrequired_inputs: []\nrequired_outputs: []\n---\n");
     expectCommandError(invoke(["type", "list"], project));
-    await writeFile(join(project, ".wayful", "types", "wrong.md"), "---\nname: wrong\nrequired_inputs: [bad]\nrequired_outputs: []\n---\n");
-    expectCommandError(invoke(["step", "create", "work", "--map", "plan", "--type", "wrong", "--description", "Do it"], project));
+    await writeFile(join(project, ".wayful", "types", "wrong.md"), "---\nformat_version: 1\nname: wrong\ndescription: Invalid slot schema\nrequired_inputs: [bad]\nrequired_outputs: []\n---\n");
+    const invalidSlots = invoke(["step", "create", "work", "--map", "plan", "--type", "wrong", "--description", "Do it"], project);
+    expectCommandError(invalidSlots);
+    expect(invalidSlots.stderr).toContain("required_inputs contains an invalid slot");
   });
 
   test("rejects duplicate or unknown map type restrictions during validation", async () => {
@@ -355,7 +380,7 @@ describe("steps and graph integrity", () => {
   test("snapshots type slots at creation, accepts JSON requirement replacements, and resolves current instructions live", async () => {
     const project = await projectFixture({ type: "research", typeSlots: "required_inputs:\n  - name: source\n    kind: document\nrequired_outputs: []\n", typeBody: "Original guidance.\n" });
     expect(invoke(["step", "create", "investigate", "--map", "plan", "--type", "research", "--description", "Investigate", "--required-inputs", "[]", "--required-outputs", "[{\"name\":\"report\",\"kind\":\"document\"}]"], project).exitCode).toBe(0);
-    await writeFile(join(project, ".wayful", "types", "research.md"), "---\nformat_version: 1\nname: research\nrequired_inputs:\n  - name: changed\n    kind: url\nrequired_outputs: []\n---\nUpdated guidance.\n");
+    await writeFile(join(project, ".wayful", "types", "research.md"), "---\nformat_version: 1\nname: research\ndescription: Updated research contract\nrequired_inputs:\n  - name: changed\n    kind: url\nrequired_outputs: []\n---\nUpdated guidance.\n");
     const shown = invoke(["step", "show", "investigate", "--map", "plan", "--json"], project);
     expect(shown.exitCode).toBe(0);
     expect(shown.stdout).toContain("report");

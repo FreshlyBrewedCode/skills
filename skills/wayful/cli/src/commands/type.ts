@@ -9,7 +9,7 @@ export async function handleType(
   const p = await project(flags);
   if (command === "list") {
     const ts = await allTypes(p.root);
-    render(ts, flags, ts.map((t) => t.name).join("\n"));
+    render(ts, flags, ts.map((t) => `${t.name}: ${t.description}`).join("\n"));
     return;
   }
   if (command === "show") {
@@ -17,7 +17,11 @@ export async function handleType(
       p.root,
       position[2] ?? fail("type name is required."),
     );
-    render(t, flags, `${t.name}\n${t.instructions}`);
+    render(
+      t,
+      flags,
+      `${t.name}: ${t.description}\nInstructions:\n${t.instructions || "(empty)"}`,
+    );
     return;
   }
   fail(`unknown type command '${command}'.`);

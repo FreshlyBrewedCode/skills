@@ -60,6 +60,18 @@ An explicit `--project` or `--map` takes precedence over its corresponding envir
 
 ## Define steps and their relationships
 
+### Inspect step types
+
+Step types are manually maintained Markdown files in `.wayful/types`. Their
+frontmatter provides a type's `name` and concise `description`; the Markdown
+body provides its instructions. List available types with their descriptions,
+or inspect one type together with its instructions:
+
+```sh
+wayful type list
+wayful type show research
+```
+
 Add steps using a type supported by the project's or map's configuration. Give each step a concise description of the result it should achieve, rather than a rigid implementation plan. Every step also receives an automatically generated integer ID, starting at `1` and increasing for each new step. Commands accept either the step's name or its ID.
 
 ```sh

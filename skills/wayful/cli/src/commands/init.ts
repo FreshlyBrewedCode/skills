@@ -20,6 +20,7 @@ export async function handleInit(flags: Record<string, any>) {
   await writeMd(join(root, ".wayful", "types", "task.md"), {
     format_version: 1,
     name: "task",
+    description: "A general-purpose work step.",
     required_inputs: [],
     required_outputs: [],
   });
