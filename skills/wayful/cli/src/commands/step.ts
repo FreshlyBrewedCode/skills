@@ -42,9 +42,9 @@ export async function handleStep(
       (highest, candidate) => Math.max(highest, candidate.id),
       0,
     );
-    const id = m.data.next_step_id;
+    const id = m.data.step_id_counter;
     if (id <= highestStepID)
-      fail("map next_step_id must be greater than every existing step ID.");
+      fail("map step_id_counter must be greater than every existing step ID.");
 
     const typeDefinition = await typeDef(m.root, type);
     if (m.data.allowed_step_types && !m.data.allowed_step_types.includes(type))
@@ -75,7 +75,7 @@ export async function handleStep(
       steps.some((candidate) => candidate.id === id) ||
       existsSync(join(m.dir, "steps", `${id}-${name}.md`))
     )
-      fail("map next_step_id would overwrite an existing step.");
+      fail("map step_id_counter would overwrite an existing step.");
     await writeMd(
       join(m.dir, "steps", `${id}-${name}.md`),
       {
@@ -93,7 +93,7 @@ export async function handleStep(
       },
       flags.body ?? "",
     );
-    m.data.next_step_id = id + 1;
+    m.data.step_id_counter = id + 1;
     await atomic(join(m.dir, "map.toml"), toml(m.data));
     console.log(`Created step ${id} '${name}'.`);
     return;

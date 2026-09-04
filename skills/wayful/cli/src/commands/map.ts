@@ -28,7 +28,7 @@ export async function handleMapCreate(flags: Record<string, any>) {
   await mkdir(join(dir, "goals"));
   await atomic(
     join(dir, "map.toml"),
-    toml({ format_version: 1, name, start, next_step_id: 1 }),
+    toml({ format_version: 1, name, start, step_id_counter: 1 }),
   );
   await writeMd(
     join(dir, "goals", "initial-goal.md"),

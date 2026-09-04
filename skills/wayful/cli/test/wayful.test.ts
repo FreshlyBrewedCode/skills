@@ -50,7 +50,7 @@ async function projectFixture(options: { map?: string; type?: string; typeBody?:
   await mkdir(join(project, ".wayful", "maps", map, "goals"), { recursive: true });
   await mkdir(join(project, ".wayful", "types"), { recursive: true });
   await writeFile(join(project, ".wayful", "project.toml"), "format_version = 1\ndescription = \"Fixture project\"\n");
-  await writeFile(join(project, ".wayful", "maps", map, "map.toml"), `format_version = 1\nname = "${map}"\nstart = "here"\nnext_step_id = 1\n${options.mapFields ?? ""}`);
+  await writeFile(join(project, ".wayful", "maps", map, "map.toml"), `format_version = 1\nname = "${map}"\nstart = "here"\nstep_id_counter = 1\n${options.mapFields ?? ""}`);
   const typeSlots = options.typeSlots ?? "required_inputs: []\nrequired_outputs: []\n";
   await writeFile(join(project, ".wayful", "types", `${type}.md`), `---\nformat_version: 1\nname: ${type}\ndescription: Fixture type\n${typeSlots}---\n${options.typeBody ?? ""}`);
   return project;
@@ -61,8 +61,8 @@ async function writeStep(project: string, name: string, id: number, fields = "")
   await writeFile(join(project, ".wayful", "maps", "plan", "steps", `${id}-${name}.md`), `---\nformat_version: 1\nid: ${id}\nname: ${name}\ntype: task\ndescription: Original description\nstatus: pending\ndependencies: []\ninputs: []\noutputs: []\n${requirements}---\nNarrative that must survive frontmatter updates.\n`);
   const mapFile = join(project, ".wayful", "maps", "plan", "map.toml");
   const metadata = await readFile(mapFile, "utf8");
-  const nextStepID = Number(metadata.match(/^next_step_id = (\d+)$/m)?.[1] ?? 1);
-  if (nextStepID <= id) await writeFile(mapFile, metadata.replace(/^next_step_id = \d+$/m, `next_step_id = ${id + 1}`));
+  const stepIDCounter = Number(metadata.match(/^step_id_counter = (\d+)$/m)?.[1] ?? 1);
+  if (stepIDCounter <= id) await writeFile(mapFile, metadata.replace(/^step_id_counter = \d+$/m, `step_id_counter = ${id + 1}`));
 }
 
 describe("the wayful executable entrypoint", () => {
@@ -195,7 +195,7 @@ describe("project and context contracts", () => {
   test("requires explicit map context and gives --map precedence over WAYFUL_MAP", async () => {
     const project = await projectFixture();
     await mkdir(join(project, ".wayful", "maps", "other", "steps"), { recursive: true });
-    await writeFile(join(project, ".wayful", "maps", "other", "map.toml"), "format_version = 1\nname = \"other\"\nstart = \"there\"\nnext_step_id = 1\n");
+    await writeFile(join(project, ".wayful", "maps", "other", "map.toml"), "format_version = 1\nname = \"other\"\nstart = \"there\"\nstep_id_counter = 1\n");
     const missing = invoke(["map", "show"], project);
     expectCommandError(missing);
     expect(missing.stderr).toBe("wayful: map context is required; pass --map or set WAYFUL_MAP.\n");
@@ -253,8 +253,8 @@ describe("maps, types, and readable rendering", () => {
 
     const listedJson = invoke(["map", "list", "--json"], project);
     expect(JSON.parse(listedJson.stdout)).toEqual([
-      { format_version: 1, name: "plan", start: "here", next_step_id: 1 },
-      { format_version: 1, name: "release-plan", start: "now", next_step_id: 1 },
+      { format_version: 1, name: "plan", start: "here", step_id_counter: 1 },
+      { format_version: 1, name: "release-plan", start: "now", step_id_counter: 1 },
     ]);
   });
 
@@ -266,7 +266,7 @@ describe("maps, types, and readable rendering", () => {
     expect(malformed.exitCode).toBe(1);
     expect(malformed.stderr).toMatch(/^wayful: invalid map:/);
     expectCommandError(invoke(["map", "show", "--map", "plan"], project));
-    const corrupted = "format_version = 2\nname = \"plan\"\nstart = \"here\"\nnext_step_id = 1\n";
+    const corrupted = "format_version = 2\nname = \"plan\"\nstart = \"here\"\nstep_id_counter = 1\n";
     await writeFile(mapFile, corrupted);
     const unsupported = invoke(["map", "validate", "--map", "plan"], project);
     expect(unsupported.exitCode).toBe(1);
@@ -277,7 +277,7 @@ describe("maps, types, and readable rendering", () => {
     const project = await projectFixture();
     const mapFile = join(project, ".wayful", "maps", "plan", "map.toml");
     for (const start of ["", "   "]) {
-      await writeFile(mapFile, `format_version = 1\nname = "plan"\nstart = "${start}"\nnext_step_id = 1\n`);
+      await writeFile(mapFile, `format_version = 1\nname = "plan"\nstart = "${start}"\nstep_id_counter = 1\n`);
       expect(invoke(["map", "validate", "--map", "plan"], project).exitCode).toBe(1);
       expectCommandError(invoke(["map", "show", "--map", "plan"], project));
     }
@@ -290,7 +290,7 @@ describe("maps, types, and readable rendering", () => {
     expect(valid.exitCode).toBe(0);
     expect(JSON.parse(valid.stdout)).toEqual({ valid: true, errors: [] });
     expect(valid.stderr).toBe("");
-    const corrupted = "format_version = 2\nname = \"plan\"\nstart = \"here\"\nnext_step_id = 1\n";
+    const corrupted = "format_version = 2\nname = \"plan\"\nstart = \"here\"\nstep_id_counter = 1\n";
     await writeFile(mapFile, corrupted);
     const invalid = invoke(["map", "validate", "--map", "plan", "--json"], project);
     expect(invalid.exitCode).toBe(1);
@@ -346,7 +346,7 @@ describe("maps, types, and readable rendering", () => {
     const project = await projectFixture();
     const mapFile = join(project, ".wayful", "maps", "plan", "map.toml");
     for (const restriction of ["[\"task\", \"task\"]", "[\"missing\"]"]) {
-      await writeFile(mapFile, `format_version = 1\nname = "plan"\nstart = "here"\nnext_step_id = 1\nallowed_step_types = ${restriction}\n`);
+      await writeFile(mapFile, `format_version = 1\nname = "plan"\nstart = "here"\nstep_id_counter = 1\nallowed_step_types = ${restriction}\n`);
       const validation = invoke(["map", "validate", "--map", "plan"], project);
       expect(validation.exitCode).toBe(1);
       expectCommandError(invoke(["map", "show", "--map", "plan"], project));
@@ -606,11 +606,11 @@ describe("artifacts, goals, and validation", () => {
     const first = join(project, ".wayful", "maps", "plan", "steps", "1-first.md");
     await writeFile(first, (await readFile(first, "utf8")).replace("dependencies: []", "dependencies: [4, 4]"));
     const mapFile = join(project, ".wayful", "maps", "plan", "map.toml");
-    await writeFile(mapFile, (await readFile(mapFile, "utf8")).replace(/^next_step_id = \d+$/m, "next_step_id = 3"));
+    await writeFile(mapFile, (await readFile(mapFile, "utf8")).replace(/^step_id_counter = \d+$/m, "step_id_counter = 3"));
     const validation = invoke(["map", "validate", "--map", "plan"], project);
     expect(validation.exitCode).toBe(1);
     expect(validation.stderr).toContain("duplicate dependency");
-    expect(validation.stderr).toContain("next_step_id must be greater than every existing step ID");
+    expect(validation.stderr).toContain("step_id_counter must be greater than every existing step ID");
     expectCommandError(invoke(["step", "create", "new-work", "--map", "plan", "--type", "task", "--description", "Must not write"], project));
     await expect(readFile(join(project, ".wayful", "maps", "plan", "steps", "3-new-work.md"), "utf8")).rejects.toThrow();
   });
@@ -620,14 +620,14 @@ describe("artifacts, goals, and validation", () => {
     await writeStep(project, "work", 1);
     const mapFile = join(project, ".wayful", "maps", "plan", "map.toml");
     const stepFile = join(project, ".wayful", "maps", "plan", "steps", "1-work.md");
-    await writeFile(mapFile, (await readFile(mapFile, "utf8")).replace("next_step_id = 2", "next_step_id = 1"));
+    await writeFile(mapFile, (await readFile(mapFile, "utf8")).replace("step_id_counter = 2", "step_id_counter = 1"));
     const beforeMap = await readFile(mapFile, "utf8");
     const beforeStep = await readFile(stepFile, "utf8");
 
     const result = invoke(["step", "update", "work", "--map", "plan", "--description", "Must not update"], project);
 
     expectCommandError(result);
-    expect(result.stderr).toContain("next_step_id must be greater than every existing step ID");
+    expect(result.stderr).toContain("step_id_counter must be greater than every existing step ID");
     expect(await readFile(mapFile, "utf8")).toBe(beforeMap);
     expect(await readFile(stepFile, "utf8")).toBe(beforeStep);
   });

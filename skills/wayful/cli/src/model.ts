@@ -57,7 +57,7 @@ async function mapContext(flags: Dict) {
       "format_version",
       "name",
       "start",
-      "next_step_id",
+      "step_id_counter",
       "allowed_step_types",
     ]);
     if (Object.keys(data).some((key) => !allowed.has(key)))
@@ -66,8 +66,8 @@ async function mapContext(flags: Dict) {
     if (
       data.name !== name ||
       !nonEmpty(data.start, "map start") ||
-      !Number.isInteger(data.next_step_id) ||
-      data.next_step_id < 1
+      !Number.isInteger(data.step_id_counter) ||
+      data.step_id_counter < 1
     )
       fail("malformed map metadata.");
     if (data.allowed_step_types !== undefined) {
@@ -349,9 +349,9 @@ async function validate(m: any, includeProgress = true) {
     return errors;
   }
   const highestStepID = ss.reduce((highest, s) => Math.max(highest, s.id), 0);
-  if (m.data.next_step_id <= highestStepID)
+  if (m.data.step_id_counter <= highestStepID)
     errors.push(
-      "map next_step_id must be greater than every existing step ID.",
+      "map step_id_counter must be greater than every existing step ID.",
     );
   const artifactNames = new Set<string>();
   for (const art of arts) {
