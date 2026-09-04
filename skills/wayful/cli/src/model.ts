@@ -89,6 +89,31 @@ async function mapContext(flags: Dict) {
     throw error;
   }
 }
+async function allMaps(flags: Dict) {
+  const p = await project(flags);
+  const dir = join(p.root, ".wayful", "maps");
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch (error: any) {
+    if (error?.code === "ENOENT") return [];
+    fail("cannot read project maps.");
+  }
+  const maps = await Promise.all(
+    entries
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort()
+      .map(async (name) => {
+        try {
+          return (await mapContext({ project: p.root, map: name })).data;
+        } catch {
+          return undefined;
+        }
+      }),
+  );
+  return maps.filter((map): map is Dict => map !== undefined);
+}
 async function typeDef(root: string, name: string) {
   identifier(name, "type name");
   const file = join(root, ".wayful", "types", `${name}.md`);
@@ -404,6 +429,7 @@ async function assertWritableMapIntegrity(m: any) {
 }
 
 export {
+  allMaps,
   allSteps,
   allTypes,
   artifacts,

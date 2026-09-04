@@ -42,10 +42,14 @@ wayful --project ../website-redesign map status --map redesign
 All map-scoped commands require `--map <map-name>` when a map has not been supplied through the environment. Use `show` to inspect an individual primitive and `status` to understand the map as a whole:
 
 ```sh
+wayful map list
 wayful map show --map redesign
 wayful map status --map redesign
 wayful map next --map redesign
 ```
+
+`wayful map list` is project-scoped: it does not need `--map` and shows every
+available map with its starting point.
 
 For less verbose batch changes, set the project and map context with `WAYFUL_PROJECT` and `WAYFUL_MAP`. `WAYFUL_PROJECT` holds a path to the project and `WAYFUL_MAP` holds a map name. They provide the same context as `--project` and `--map`, so commands can omit those flags:
 

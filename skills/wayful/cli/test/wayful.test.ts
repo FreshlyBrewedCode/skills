@@ -119,6 +119,7 @@ describe("project and context contracts", () => {
       [["init", "--help"], "--description TEXT"],
       [["map", "create", "--help"], "--goal TEXT"],
       [["map", "create", "--help"], "--goal-body TEXT"],
+      [["map", "list", "--help"], "--project DIR"],
       [["map", "validate", "--help"], "--json"],
       [["map", "show", "--help"], "Required options:"],
       [["map", "next", "--help"], "--map NAME"],
@@ -237,6 +238,24 @@ describe("maps, types, and readable rendering", () => {
     expect(show.exitCode).toBe(0);
     expect(() => JSON.parse(show.stdout)).not.toThrow();
     expect(invoke(["map", "status", "--map", "plan", "--json"], project).exitCode).toBe(0);
+  });
+
+  test("lists project maps without requiring map context", async () => {
+    const project = await projectFixture();
+    expect(invoke(["map", "create", "--map", "release-plan", "--start", "now", "--goal", "released"], project).exitCode).toBe(0);
+    const invalidMap = join(project, ".wayful", "maps", "invalid");
+    await mkdir(invalidMap);
+    await writeFile(join(invalidMap, "map.toml"), "not valid TOML = [");
+
+    const listed = invoke(["map", "list"], project);
+    expect(listed.exitCode).toBe(0);
+    expect(listed.stdout).toBe("plan: here\nrelease-plan: now\n");
+
+    const listedJson = invoke(["map", "list", "--json"], project);
+    expect(JSON.parse(listedJson.stdout)).toEqual([
+      { format_version: 1, name: "plan", start: "here", next_step_id: 1 },
+      { format_version: 1, name: "release-plan", start: "now", next_step_id: 1 },
+    ]);
   });
 
   test("reports malformed and unsupported map metadata as invalid map validation", async () => {

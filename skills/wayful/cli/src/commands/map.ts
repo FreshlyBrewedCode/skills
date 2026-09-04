@@ -4,6 +4,7 @@ import { join } from "node:path";
 
 import { atomic, fail, identifier, nonEmpty, toml, writeMd } from "../core";
 import {
+  allMaps,
   allSteps,
   artifacts,
   attachmentOK,
@@ -40,6 +41,11 @@ export async function handleMapCreate(flags: Record<string, any>) {
     flags["goal-body"] ?? "",
   );
   console.log(`Created map '${name}'.`);
+}
+
+export async function handleMapList(flags: Record<string, any>) {
+  const maps = await allMaps(flags);
+  render(maps, flags, maps.map((map) => `${map.name}: ${map.start}`).join("\n"));
 }
 
 export async function handleMap(

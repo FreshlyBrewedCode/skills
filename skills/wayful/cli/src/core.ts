@@ -132,6 +132,7 @@ function groupUsage(group: string) {
   const commands: Record<string, string[]> = {
     map: [
       "create --map NAME --start TEXT --goal TEXT [--goal-body TEXT] [--project DIR]",
+      "list [--project DIR] [--json]",
       "validate --map NAME [--project DIR] [--json]",
       "show --map NAME [--project DIR] [--json]",
       "next --map NAME [--project DIR] [--json]",
@@ -187,6 +188,13 @@ Required options:
 Options:
   --project DIR         Project directory
   --goal-body TEXT      Optional initial goal Markdown body
+  --help                Show help
+`,
+    "map:list": `Usage: wayful map list [--project DIR] [--json]
+
+Options:
+  --project DIR         Project directory
+  --json                Render stable JSON output
   --help                Show help
 `,
     "map:validate": mapReadUsage("validate"),
@@ -342,6 +350,7 @@ const commandOptions: Record<
 > = {
   init: { options: ["project", "description"], positions: 0 },
   "map:create": { options: ["project", "map", "start", "goal", "goal-body"], positions: 0 },
+  "map:list": { options: ["project", "json"], positions: 0 },
   "map:validate": { options: ["project", "map", "json"], positions: 0 },
   "map:show": { options: ["project", "map", "json"], positions: 0 },
   "map:next": { options: ["project", "map", "json"], positions: 0 },

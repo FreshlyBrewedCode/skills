@@ -12,7 +12,7 @@ import { assertWritableMapIntegrity, mapContext } from "./model";
 import { handleArtifact } from "./commands/artifact";
 import { handleGoal } from "./commands/goal";
 import { handleInit } from "./commands/init";
-import { handleMap, handleMapCreate } from "./commands/map";
+import { handleMap, handleMapCreate, handleMapList } from "./commands/map";
 import { handleStep } from "./commands/step";
 import { handleType } from "./commands/type";
 
@@ -80,6 +80,7 @@ export async function run() {
 
   if (group === "type") return handleType(command, flags, position);
   if (group === "map" && command === "create") return handleMapCreate(flags);
+  if (group === "map" && command === "list") return handleMapList(flags);
 
   let m: any;
   try {
