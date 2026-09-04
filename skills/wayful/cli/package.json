@@ -1,0 +1,7 @@
+{
+  "name": "wayful-local-cli",
+  "private": true,
+  "engines": {
+    "bun": ">=1.4.1"
+  }
+}
