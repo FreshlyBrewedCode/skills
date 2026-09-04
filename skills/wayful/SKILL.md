@@ -18,6 +18,8 @@ Wayful is best used if you want a fundamentally flexible process but still need 
 
 The CLI manages the map, not the work inside a step. Use it to capture the current state of work, discover what can happen next, and adapt the map as new information becomes available. Complete the substantive work with the appropriate tools, then record its result as artifacts and update the relevant step.
 
+Note: the cli is not in path. Run from the entrypoint relative to this skills directory: `<skill dir>/cli/wayful`
+
 ## Create and inspect work
 
 Projects are scoped to directories. Initialize a project in its directory, then run `wayful` commands from that directory; the CLI discovers the current project by default. To operate on another project, pass its directory path with `--project`.

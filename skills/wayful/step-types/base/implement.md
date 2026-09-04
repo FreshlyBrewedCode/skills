@@ -7,9 +7,9 @@ required_inputs:
     kind: spec 
     description: A specification describing the feature or change 
 required_outputs:
-  - name: PR
+  - name: pr
     kind: pr-ref
-    description: The PR implementing the feature or change
+    description: The pull request implementing the feature or change
 ---
 
 1. Gather the required context from the step description and body, input specification and codebase.
